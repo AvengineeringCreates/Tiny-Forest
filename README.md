@@ -1,2 +1,2 @@
 # Tiny-Forest
-A small library for making conditional trees.
+A small npm module for making conditional trees.

@@ -1,0 +1,11 @@
+{
+  "name": "tiny-forest",
+  "version": "1.0.0",
+  "description": "A small library of classes for managing static tree data structures.",
+  "main": "index.js",
+  "scripts": {
+    "test": "exit 0"
+  },
+  "author": "Avengineering <avengineering.creates@gmail.com>",
+  "license": "MIT"
+}
