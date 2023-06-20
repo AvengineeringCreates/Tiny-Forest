@@ -1,6 +1,6 @@
 {
   "name": "tiny-forest",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "type": "commonjs",
   "description": "A small library of classes for managing static tree data structures.",
   "keywords": [
@@ -10,13 +10,18 @@
     "conditional"
   ],
   "author": "Avengineering <avengineering.creates@gmail.com>",
-  "main": "index.js",
+  "main": "src/index.js",
   "license": "MIT",
   "scripts": {
-    "test": "exit 0"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/AvengineeringCreates/Tiny-Forest.git"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "jsdoc-to-markdown": "^8.0.0",
+    "mocha": "^10.2.0"
   }
 }
