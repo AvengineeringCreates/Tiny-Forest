@@ -1,6 +1,6 @@
 {
   "name": "tiny-forest",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "type": "commonjs",
   "description": "A small library of classes for managing static tree data structures.",
   "keywords": [

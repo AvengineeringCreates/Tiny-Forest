@@ -3,10 +3,16 @@
  * @module tiny-forest
  */
 
+/* 
+ * ! Note to self/contributors: maybe it's better to have these complex objects
+ * like the TreeNodeIndex returns be defined as custom objects for better
+ * usability?
+ */
+
 /**
  * @typedef {function} TreeNodeIndex
  * @param {*} [input] An optional input passed to the function.
- * @returns {{node: TreeNode, path: TreeNode[], result}} Returns an object containing the next node,
+ * @returns {{node: TreeNode, path: TreeNode[], result, input}} Returns an object containing the next node,
  *      the full path up to this node and an optional result value from the node.
  */
 
@@ -50,13 +56,13 @@ class Tree {
      */
     constructor(options) {
         this.tree = options.tree;
+
         if (options.rootKey) this.rootKey = options.rootKey;
         else this.rootKey = "root";
 
         if (options.fallback) this.fallback = options.fallback;
-        
+
         this.root = this.tree[this.rootKey];
-        
         this.node = this.root;
         this.path = [];
 
@@ -64,23 +70,50 @@ class Tree {
     }
 
     nextNode(currentNode, input) {
-        try {
-            let result = currentNode.index(input);
-            // ! This part might be a little redundant but I will make it more elegant later.
+        /*
+         * Nested functions like decideNextPath and catchAndUseFallback
+         * are apparently scoped independently, so we have to store "this"
+         * as a separate reference in order to use it in nested functions.
+         */
+        let that = this;
+
+        function decideNextPath(result) {
+            that.path[that.path.length] = currentNode;
             let returnedNode = null;
             let returnedOutput = null;
             if (result) {
                 returnedNode = result.next;
                 returnedOutput = result.output;
             }
-            this.node = returnedNode;
-            if (returnedNode) return this.nextNode(returnedNode, returnedOutput);
-            else return { lastNode: this.node, path: this.path, output: returnedOutput };
-            this.path[this.path.length] = currentNode;
-        } catch (e) {
-            if (currentNode.fallbackOverride) { return currentNode.fallbackOverride({ error: e, node: this.node, path: this.path }); }
-            else if (this.fallback) { return this.fallback({ error: e, node: this.node, path: this.path }); }
+            if (returnedNode) {
+                that.node = returnedNode;
+                return that.nextNode(returnedNode, returnedOutput);
+            }
+            else return { lastNode: that.node, path: that.path, output: returnedOutput };
+        }
+
+        function catchAndUseFallback(e) {
+            if (currentNode.fallbackOverride) {
+                return currentNode.fallbackOverride({ error: e, node: that.node, path: that.path, input: input });
+            }
+            else if (that.fallback) {
+                return that.fallback({ error: e, node: that.node, path: that.path, input: input });
+            }
             else throw e;
+        }
+
+        try {
+            let indexResponse = currentNode.index(input);
+            // If index returns a Promise, then return a Promise which decides the next 
+            if (typeof indexResponse === 'object' && typeof indexResponse.then === 'function') {
+                // ! The additional .catch at the end of this might be redundant, but I am too lazy to look to see how 
+                return indexResponse.then((result) => { return decideNextPath(result); }).catch((e) => { catchAndUseFallback(e); });
+            // Otherwise, treat it completely synchronously.
+            } else {
+                return decideNextPath(indexResponse);
+            }
+        } catch (e) {
+            return catchAndUseFallback(e);
         }
     }
 
